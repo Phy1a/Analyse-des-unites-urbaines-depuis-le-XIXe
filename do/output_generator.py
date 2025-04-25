@@ -30,9 +30,11 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
     df_uu_2024 = df_uu_2024[4:] # Delete first useless lines
     df_uu_2024.columns = df_uu_2024.iloc[0]      # set first line as column
     df_uu_2024 = df_uu_2024[1:]                  # delete first line
+    
 
     df_uu_2024 = df_uu_2024[df_uu_2024.iloc[:,4] == "Unité urbaine"][["LIBGEO","LIBUU2020","DEP"]] # Remove useless data
     df_uu_2024 = df_uu_2024.sort_values(by=["LIBUU2020", "LIBGEO"], ascending=[True, True])
+    print(df_uu_2024.iloc[:, 2].unique())
     df_uu_2024 = df_uu_2024[(pd.to_numeric(df_uu_2024.iloc[:, 2], errors="coerce") <= 95) | (df_uu_2024.iloc[:, 2].isin(["2A", "2B"]))] # only keep Metropolitan France
     df_uu_2024.reset_index(drop=True, inplace=True)  # reset index
 
@@ -49,7 +51,7 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
     df_pop_histo["LIBGEO"] = df_pop_histo["LIBGEO"].apply(simplify_city) # uniform city names to duplicates
 
 
-    # Complete the DataFframe for the missing years
+    # Complete the DataFrame for the missing years
 
     dep_dico = { # only Metropolitain France, code on the used website for GET requests
         "01": "36", "02": "20", "03": "55", "04": "106", "05": "58", "06": "104","07": "62", "08": "74",
