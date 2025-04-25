@@ -72,7 +72,7 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
 
     backup = df_pop_histo
 
-    for year in range(1871,1870,-5):
+    for year in range(1871,1800,-5):
         df_year = pd.DataFrame()
         for dep in list(dep_dico.keys()):
             url = f"http://cassini.ehess.fr/fr/PHP/exportPopCSV.php?csv=1&valider=validation&departement={dep_dico[dep]}&popBorneInf=0&popBorneSup=10000000&annee={year}"
