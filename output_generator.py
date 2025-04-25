@@ -4,6 +4,7 @@ import re
 import requests
 from openpyxl import load_workbook
 from openpyxl.utils import get_column_letter
+import time
 
 
 import warnings
@@ -32,7 +33,7 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
 
     df_uu_2024 = df_uu_2024[df_uu_2024.iloc[:,4] == "Unité urbaine"][["LIBGEO","LIBUU2020","DEP"]] # Remove useless data
     df_uu_2024 = df_uu_2024.sort_values(by=["LIBUU2020", "LIBGEO"], ascending=[True, True])
-    df_uu_2024 = df_uu_2024[pd.to_numeric(df_uu_2024.iloc[:, 2], errors="coerce") <= 95] # only keep Metropolitan France
+    df_uu_2024 = df_uu_2024[(pd.to_numeric(df_uu_2024.iloc[:, 2], errors="coerce") <= 95) | (df_uu_2024.iloc[:, 2].isin(["2A", "2B"]))] # only keep Metropolitan France
     df_uu_2024.reset_index(drop=True, inplace=True)  # reset index
 
     #  INPUT EXCEL FILE 2
@@ -62,14 +63,14 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
         "66": "103", "67": "64", "68": "30", "69": "87", "70": "10", "71": "35", "72": "107", "73": "109",
         "74": "51", "75": "129", "76": "8", "77": "68", "78": "24", "79": "80", "80": "27", "81": "98",
         "82": "5", "83": "81", "84": "133", "85": "116", "86": "82", "87": "113", "88": "45", "89": "61",
-        "90": "136", "91": "25", "92": "137", "93": "141", "94": "46", "95": "44"
+        "90": "136", "91": "25", "92": "137", "93": "141", "94": "46", "95": "44", "2A" : "84", "2B" : "92"
     }
 
 
 
     backup = df_pop_histo
 
-    for year in range(1871,1800,-5):
+    for year in range(1871,1870,-5):
         df_year = pd.DataFrame()
         for dep in list(dep_dico.keys()):
             url = f"http://cassini.ehess.fr/fr/PHP/exportPopCSV.php?csv=1&valider=validation&departement={dep_dico[dep]}&popBorneInf=0&popBorneSup=10000000&annee={year}"

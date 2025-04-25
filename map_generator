@@ -1,0 +1,75 @@
+import pandas as pd #pandas
+import os #os
+import geopandas as gpd
+import matplotlib.pyplot as plt
+from shapely.geometry import Point
+import shapely
+#Cette fonction permet de reparer certains fichiers
+from shapely import geometry
+upcast_dispatch = {geometry.Point: geometry.MultiPoint, 
+                   geometry.LineString: geometry.MultiLineString, 
+                   geometry.Polygon: geometry.MultiPolygon}
+
+def maybe_cast_to_multigeometry(geom):
+    caster = upcast_dispatch.get(type(geom), lambda x: x[0])
+    return caster([geom])
+
+import warnings
+warnings.filterwarnings('ignore')
+
+
+# Get the data
+df_city = pd.read_excel("output/organised_city_data.xlsx", engine='openpyxl')
+df_uu = pd.read_excel("output/organised_uu_data.xlsx", engine='openpyxl')
+df_top_24 = pd.read_excel("output/top_per_year.xlsx", engine='openpyxl')
+
+directory=os.getcwd()
+
+os.chdir(directory+r'/input')
+francegdf=gpd.read_file('france_map.json')
+francegdf.geometry=francegdf.geometry.apply(maybe_cast_to_multigeometry)
+francegdf.crs={'init': 'epsg:4326'}
+
+df_coords = pd.read_csv(directory+r"/input/villes_france.csv", sep=",", encoding='utf-8', on_bad_lines='skip') # read csv file
+df_coords = df_coords[["01", "Ozan", "4.91667","46.3833"]]
+df_coords = df_coords.rename(columns={
+    "01": "DEP",
+    "Ozan": "LIBGEO",
+    "4.91667": "longitude",
+    "46.3833": "latitude"
+})
+
+lost_line = pd.DataFrame([{"DEP" : "01", "LIBGEO":"Ozan", "longitude" : "4.91667", "latitude" :"46.3833"}])
+df_coords = pd.concat([df_coords, lost_line], ignore_index=True)
+
+gap = 15
+a = 2022 + gap
+for col in (df_city.columns[3:]):
+    if(not(os.path.exists(f"../output/maps/{year}.png"))):
+        year = col[-4:]
+        if(int(year) <= a - gap):
+            year = col[-4:]
+            df_temp = df_city[["DEP", "LIBGEO", col]]
+            df_temp = df_temp.merge(df_coords, on=["LIBGEO","DEP"], how="inner")
+
+            geometry = [Point(xy) for xy in zip(df_temp["longitude"], df_temp["latitude"])]
+            gdf_city = gpd.GeoDataFrame(df_temp, geometry=geometry, crs="epsg:4326")
+
+            fig, ax = plt.subplots(figsize=(12, 12))
+            francegdf.plot(ax=ax, color="whitesmoke", edgecolor="gray")
+
+            gdf_city.plot(
+            ax=ax,
+            markersize=gdf_city[col]**0.5 / 5,  # ajuste le facteur de division
+            color="crimson",
+            alpha=0.6,
+            edgecolor="black",
+            linewidth=0.3
+            )
+
+            plt.title(f"Population des villes françaises en {year}", fontsize=16)
+            plt.axis("off")
+            plt.tight_layout()
+            plt.savefig(f"../output/maps/{year}.png", dpi=300, bbox_inches="tight")
+            a = int(year)
+    
