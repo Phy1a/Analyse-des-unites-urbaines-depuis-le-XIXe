@@ -23,7 +23,6 @@ df_uu = pd.read_excel("output/organised_uu_data.xlsx", engine='openpyxl')
 df_top_24 = pd.read_excel("output/top_per_year.xlsx", engine='openpyxl')
 
 directory=os.getcwd()
-print(directory)
 
 os.chdir(directory+r'/input')
 francegdf=gpd.read_file('france_map.json')
@@ -47,7 +46,7 @@ a = 2022 + gap
 for col in (df_city.columns[3:]):
     year = col[-4:]
     if(int(year) <= a - gap):
-        if(not(os.path.exists(f"../output/maps/{year}.png"))):
+        if(not(os.path.exists(f"../output/maps/{year}.png"))): # avoid duplicates
             year = col[-4:]
             df_temp = df_city[["DEP", "LIBGEO", col]]
             df_temp = df_temp.merge(df_coords, on=["LIBGEO","DEP"], how="inner")
