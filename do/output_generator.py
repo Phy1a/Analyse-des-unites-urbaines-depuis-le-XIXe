@@ -48,7 +48,7 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
 
     df_pop_histo = df_pop_histo.iloc[:,2:]#remove useless columns
     df_pop_histo["LIBGEO"] = df_pop_histo["LIBGEO"].apply(simplify_city) # uniform city names to duplicates
-
+    df_pop_histo = df_pop_histo.groupby(["DEP", "LIBGEO"], as_index=False)[df_pop_histo.columns[3:]].sum() # sum duplicates
 
     # Complete the DataFrame for the missing years
 
