@@ -19,8 +19,6 @@ warnings.filterwarnings('ignore')
 
 # Get the data
 df_city = pd.read_excel("output/organised_city_data.xlsx", engine='openpyxl')
-df_uu = pd.read_excel("output/organised_uu_data.xlsx", engine='openpyxl')
-df_top_24 = pd.read_excel("output/top_per_year.xlsx", engine='openpyxl')
 
 directory=os.getcwd()
 
