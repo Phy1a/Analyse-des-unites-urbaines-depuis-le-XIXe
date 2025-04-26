@@ -18,12 +18,16 @@ warnings.filterwarnings('ignore')
 
 
 # Get the data
+if not(os.path.exists("output/organised_city_data.xlsx")):
+    print("Missing file : output/organised_city_data 1.xlsx")
+    print('Code ended, please run "output_generator.py" first')
+    exit(1)
+
 df_city = pd.read_excel("output/organised_city_data.xlsx", engine='openpyxl')
 
 directory=os.getcwd()
 
-os.chdir(directory+r'/input')
-francegdf=gpd.read_file('france_map.json')
+francegdf=gpd.read_file('input/france_map.json')
 francegdf.geometry=francegdf.geometry.apply(maybe_cast_to_multigeometry)
 francegdf.crs={'init': 'epsg:4326'}
 
@@ -44,13 +48,16 @@ a = 2022 + gap
 for col in (df_city.columns[3:]):
     year = col[-4:]
     if(int(year) <= a - gap):
-        if(not(os.path.exists(f"../output/maps/{year}.png"))): # avoid duplicates
+        if(not(os.path.exists(f"output/maps/{year}.png"))): # avoid duplicates
             year = col[-4:]
             df_temp = df_city[["DEP", "LIBGEO", col]]
+            print(f"Nombre de villes dans df_temp après merge pour {year} : {len(df_temp)}")
             df_temp = df_temp.merge(df_coords, on=["LIBGEO","DEP"], how="inner")
+            print(f"Nombre de villes dans df_temp après merge pour {year} : {len(df_temp)}")
 
-            geometry = [Point(xy) for xy in zip(df_temp["longitude"], df_temp["latitude"])]
-            gdf_city = gpd.GeoDataFrame(df_temp, geometry=geometry, crs="epsg:4326")
+            geometries = [Point(xy) for xy in zip(df_temp["longitude"], df_temp["latitude"])]
+            gdf_city = gpd.GeoDataFrame(df_temp, geometry=geometries, crs="epsg:4326")
+            print(f"Nombre de villes à afficher pour {year} :", len(gdf_city))
 
             fig, ax = plt.subplots(figsize=(12, 12))
             francegdf.plot(ax=ax, color="whitesmoke", edgecolor="gray")
@@ -67,5 +74,5 @@ for col in (df_city.columns[3:]):
             plt.title(f"Population des villes françaises en {year}", fontsize=16)
             plt.axis("off")
             plt.tight_layout()
-            plt.savefig(f"../output/maps/{year}.png", dpi=300, bbox_inches="tight")
+            plt.savefig(f"output/maps/{year}.png", dpi=300, bbox_inches="tight")
             a = int(year)

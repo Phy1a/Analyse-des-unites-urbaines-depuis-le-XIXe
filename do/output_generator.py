@@ -21,7 +21,6 @@ def simplify_city(libgeo):
 directory=os.getcwd()
 
 
-
 if not(os.path.exists("output/organised_city_data.xlsx")):
 
     # INPUT EXCEL FILE 1
@@ -39,18 +38,22 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
 
     #  INPUT EXCEL FILE 2
 
-    df_pop_histo = pd.read_excel("input/base-pop-historiques-1876-2022.xlsx", engine='openpyxl')
+    if os.path.exists("input/base-pop-historiques-1876-2022-updated.xlsx"):
+        df_pop_histo = pd.read_excel("input/base-pop-historiques-1876-2022-updated.xlsx", engine='openpyxl')
+    
+    else:
+        df_pop_histo = pd.read_excel("input/base-pop-historiques-1876-2022.xlsx", engine='openpyxl')
 
-    df_pop_histo = df_pop_histo[4:] # Delete first useless lines
-    df_pop_histo.columns = df_pop_histo.iloc[0]      # set first line as column
-    df_pop_histo = df_pop_histo[1:]                  # delete first line
-    df_pop_histo.reset_index(drop=True, inplace=True)  # reset index
+        df_pop_histo = df_pop_histo[4:] # Delete first useless lines
+        df_pop_histo.columns = df_pop_histo.iloc[0]      # set first line as column
+        df_pop_histo = df_pop_histo[1:]                  # delete first line
+        df_pop_histo.reset_index(drop=True, inplace=True)  # reset index
 
-    df_pop_histo = df_pop_histo.iloc[:,2:]#remove useless columns
-    df_pop_histo["LIBGEO"] = df_pop_histo["LIBGEO"].apply(simplify_city) # uniform city names to duplicates
-    df_pop_histo = df_pop_histo.groupby(["DEP", "LIBGEO"], as_index=False)[df_pop_histo.columns[3:]].sum() # sum duplicates
+        df_pop_histo = df_pop_histo.iloc[:,2:]#remove useless columns
+        df_pop_histo["LIBGEO"] = df_pop_histo["LIBGEO"].apply(simplify_city) # uniform city names to duplicates
+        df_pop_histo = df_pop_histo.groupby(["DEP", "LIBGEO"], as_index=False)[df_pop_histo.columns[3:]].sum() # sum duplicates
 
-    # Complete the DataFrame for the missing years
+    # Complete the DataFrame for the missing years 1875 - 1801
 
     url = "http://cassini.ehess.fr/"
     try:
@@ -71,14 +74,12 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
                 "90": "136", "91": "25", "92": "137", "93": "141", "94": "46", "95": "44", "2A" : "84", "2B" : "92"
             }
 
-
             backup = df_pop_histo
 
             for year in range(1871,1800,-5):
                 df_year = pd.DataFrame()
                 for dep in list(dep_dico.keys()):
                     url = f"http://cassini.ehess.fr/fr/PHP/exportPopCSV.php?csv=1&valider=validation&departement={dep_dico[dep]}&popBorneInf=0&popBorneSup=10000000&annee={year}"
-                    filename = f"output/cassini_dep_{dep}_{year}.csv"
 
                     try:
                         # send GET request
@@ -113,20 +114,17 @@ if not(os.path.exists("output/organised_city_data.xlsx")):
                 duplicates = df_year.duplicated(subset=["LIBGEO", "DEP"]).sum()
                 if duplicates > 0:
                     print(f"⚠️  {duplicates} duplicates in df_year for {year} on LIBGEO+DEP")
-
+                
                     
             new_cols = [col for col in df_pop_histo if col not in backup.columns] # Identify new columns
             df_pop_histo = df_pop_histo[[*backup.columns, *new_cols]] # Reorganize columns
         else:
-            print(f"Le site a répondu avec le code : {response.status_code} ❌")
+            print(f"Website answered with the code : {response.status_code} ❌")
+            print("Unable to load datas before 1876 because the website isn't accessible")
     except requests.exceptions.RequestException as e:
-        print(f"Erreur de connexion : {e} ❌")
+        print(f"Connexion error : {e} ❌")
+        print("Unable to load datas before 1876 because the website isn't accessible")
     
-    print("Impossible to load datas before 1876 because the website isn't accessible")
-    
-
-    
-
 
     df_total = df_uu_2024.merge(df_pop_histo, on=["LIBGEO","DEP"], how="inner") # fusion
     df_total.to_excel("output/organised_city_data.xlsx", index=False, engine='openpyxl') # OUTPUT 1
