@@ -59,7 +59,7 @@ for col in (df_city.columns[3:]):
 
             gdf_city.plot(
             ax=ax,
-            markersize=gdf_city[col]**0.5 / 5,  # ajuste le facteur de division
+            markersize=gdf_city[col]**0.5 / 3,  # ajuste le facteur de division
             color="crimson",
             alpha=0.6,
             edgecolor="black",
