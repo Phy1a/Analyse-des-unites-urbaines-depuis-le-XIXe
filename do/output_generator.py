@@ -145,7 +145,6 @@ if not(os.path.exists("output/top_per_year.xlsx")):
     wb = load_workbook("output/top_per_year.xlsx")
     ws = wb.active
 
-    # Parcours de A à la dernière colonne utilisée
     for col_idx in range(1, ws.max_column + 1):
         col_letter = get_column_letter(col_idx)
         ws.column_dimensions[col_letter].width = 25
